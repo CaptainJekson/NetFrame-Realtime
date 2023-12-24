@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Examples.Scripts.Managers
 {
-    public class ServerRealTimeManager : MonoBehaviour
+    public class ServerRealTimeManager : MonoBehaviour//
     {
         private NetFrameServer _netFrameServer;
 
