@@ -1,5 +1,5 @@
+using Examples.Scripts.Dataframes;
 using NetFrame.Components;
-using Samples.DataframesForRealtime;
 
 namespace Examples.Scripts.NetworkComponents
 {

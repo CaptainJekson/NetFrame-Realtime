@@ -1,22 +1,25 @@
 using System.Collections.Generic;
 using System.Reflection;
-using Examples.Scripts.Dataframes;
+using Examples.Scripts.Model;
 using NetFrame.Enums;
 using NetFrame.Server;
 using NetFrame.Utils;
-using Samples.DataframesForRealtime;
 using UnityEngine;
 
 namespace Examples.Scripts.Managers
 {
-    public class ServerRealTimeManager : MonoBehaviour//
+    public class ServerRealTimeManager : MonoBehaviour
     {
         private NetFrameServer _netFrameServer;
 
-        private Dictionary<int, Vector3> _players = new();
+        private Dictionary<int, PlayerModel> _players;
 
-        private void Start()
+        public NetFrameServer Server => _netFrameServer;
+
+        private void Awake()
         {
+            _players = new Dictionary<int, PlayerModel>();
+            
             NetFrameDataframeCollection.Initialize(Assembly.GetExecutingAssembly());
             _netFrameServer = new NetFrameServer(2000);
             
@@ -25,39 +28,11 @@ namespace Examples.Scripts.Managers
             _netFrameServer.ClientConnection += OnClientConnection;
             _netFrameServer.ClientDisconnect += OnClientDisconnect;
             _netFrameServer.LogCall += OnLog;
-            
-            _netFrameServer.Subscribe<PlayerSpawnDataframe>(PlayerSpawnRemoteRequestDataframeHandler);
-            _netFrameServer.Subscribe<PlayerMoveDataframe>(PlayerMoveDataframeHandler);
         }
 
         private void Update()
         {
             _netFrameServer.Run(100);
-        }
-
-        private void PlayerSpawnRemoteRequestDataframeHandler(PlayerSpawnDataframe dataframe, int id)
-        {
-            
-            _netFrameServer.SendAllExcept(ref dataframe, id);
-
-            foreach (var player in _players)
-            {
-                var dataframe2 = new PlayerSpawnDataframe
-                {
-                    StartPosition = player.Value,
-                };
-                
-                _netFrameServer.Send(ref dataframe2, id);
-            }
-            
-            _players.Add(id, dataframe.StartPosition);
-        }
-        
-        private void PlayerMoveDataframeHandler(PlayerMoveDataframe dataframe, int id)
-        {
-            _netFrameServer.SendAllExcept(ref dataframe, id);
-
-            _players[id] = dataframe.Position;
         }
 
         private void OnClientConnection(int id)
@@ -88,9 +63,6 @@ namespace Examples.Scripts.Managers
 
         private void OnApplicationQuit()
         {
-            _netFrameServer.Unsubscribe<PlayerSpawnDataframe>(PlayerSpawnRemoteRequestDataframeHandler);
-            _netFrameServer.Unsubscribe<PlayerMoveDataframe>(PlayerMoveDataframeHandler);
-            
             _netFrameServer.Stop();
         }
     }

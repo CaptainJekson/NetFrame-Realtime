@@ -21,10 +21,13 @@ namespace NetFrame.Components
         [SerializeField] public SnapshotInterpolationSettings snapshotSettings = new SnapshotInterpolationSettings();
 
         private SortedList<double, T> _bufferSnapshots;
+        private int _id;
         
         private double BufferTime => IntervalSend * snapshotSettings.bufferTimeMultiplier;
         
         private float IntervalSend => 1.0f / frequencySend;
+
+        private int Id => _id;
         
         private float _lastSendTime;
         
@@ -35,6 +38,11 @@ namespace NetFrame.Components
         private ExponentialMovingAverage _deliveryTimeEma;
         
         private NetFrameClient _netFrameClient;
+
+        public void SetId(int id)
+        {
+            _id = id;
+        }
 
         private void Awake()
         {
@@ -58,8 +66,8 @@ namespace NetFrame.Components
                 
                     var dataframe = new T
                     {
-                        RemoteTime = NetworkTime.LocalTime,
-                        LocalTime = 0,
+                        RemoteTime = 0,
+                        LocalTime = NetworkTime.LocalTime,
                         Position = currentTransform.position,
                         Rotation = currentTransform.rotation,
                     };
@@ -104,6 +112,11 @@ namespace NetFrame.Components
         
         private void DataframeSnapshotsHandler(T dataframeSnapshots)
         {
+            if (dataframeSnapshots.Id != _id)
+            {
+                return;
+            }
+            
             dataframeSnapshots.LocalTime = NetworkTime.LocalTime;
 
             if (snapshotSettings.dynamicAdjustment)

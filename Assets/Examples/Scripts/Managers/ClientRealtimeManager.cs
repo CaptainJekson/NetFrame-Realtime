@@ -1,34 +1,45 @@
 using System.Reflection;
-using Examples.Scripts.Dataframes;
-using Examples.Scripts.NetworkComponents;
 using NetFrame.Client;
 using NetFrame.Enums;
 using NetFrame.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Examples.Scripts.Managers
 {
     public class ClientRealtimeManager : MonoBehaviour
     {
-        [SerializeField] private NetworkTransformPlayer localPlayerTemplate;
-        [SerializeField] private NetworkTransformPlayer remotePlayerTemplate;
+        [Header("IpAddress")]
+        [SerializeField] private string ipAddress; //"127.0.0.1" //"192.168.31.103"
         
-        private string _ipAddress = "192.168.31.103"; //"127.0.0.1"
+        [Header("Buttons")] 
+        [SerializeField] private Button connectButton;
+        [SerializeField] private Button disconnectButton;
+        
 
         private NetFrameClient _netFrameClient;
-        
-        private void Start()
+
+        public NetFrameClient Client => _netFrameClient;
+
+        private void Awake()
         {
             NetFrameDataframeCollection.Initialize(Assembly.GetExecutingAssembly());
             
             _netFrameClient = new NetFrameClient(2000);
-            _netFrameClient.Connect(_ipAddress, 8080);
 
             _netFrameClient.ConnectionSuccessful += OnConnectionSuccessful;
             _netFrameClient.LogCall += OnLog;
             _netFrameClient.Disconnected += OnDisconnected;
-
-            _netFrameClient.Subscribe<PlayerSpawnDataframe>(PlayerSpawnDataframeHandler);
+            
+            connectButton.onClick.AddListener(() =>
+            {
+                _netFrameClient.Connect(ipAddress, 8080);
+            });
+            
+            disconnectButton.onClick.AddListener(() =>
+            {
+                _netFrameClient.Disconnect();
+            });
         }
 
         private void Update()
@@ -44,18 +55,6 @@ namespace Examples.Scripts.Managers
         private void OnConnectionSuccessful()
         {
             Debug.Log("Connected Successful to server");
-
-            var startPosition = new Vector3(Random.Range(-10f, 10f), Random.Range(-4f, 4f),0);
-            var startRotation = Quaternion.identity;
-            
-            var spawnedPlayer = Instantiate(localPlayerTemplate, startPosition, startRotation);
-
-            var spawnDataframe = new PlayerSpawnDataframe
-            {
-                StartPosition = startPosition,
-                StartRotation = startRotation,
-            };
-            _netFrameClient.Send(ref spawnDataframe);
         }
         
         private void OnLog(NetworkLogType reason, string value)
@@ -73,23 +72,13 @@ namespace Examples.Scripts.Managers
                     break;
             }
         }
-        
-        private void PlayerSpawnDataframeHandler(PlayerSpawnDataframe dataframe)
-        {
-            var startPosition = dataframe.StartPosition;
-            var startRotation = dataframe.StartRotation;
-            
-            var spawnedPlayer = Instantiate(remotePlayerTemplate, startPosition, startRotation);
-        }
 
         private void OnApplicationQuit()
         {
             _netFrameClient.ConnectionSuccessful -= OnConnectionSuccessful;
             _netFrameClient.LogCall -= OnLog;
             _netFrameClient.Disconnected -= OnDisconnected;
-            
-            _netFrameClient.Unsubscribe<PlayerSpawnDataframe>(PlayerSpawnDataframeHandler);
-            
+
             _netFrameClient.Disconnect();
         }
     }
