@@ -20,13 +20,14 @@ namespace Examples.Scripts.Managers.Players
         {
             _spawnedPlayers = new Dictionary<int, NetworkTransformPlayer>();
             
-            clientManager.Client.ConnectionSuccessful += ConnectionSuccessful;
+            clientManager.Client.ConnectionSuccessful += OnConnectionSuccessful;
+            clientManager.Client.Disconnected += OnDisconnected;
             
             clientManager.Client.Subscribe<PlayerSpawnResponseDataframe>(PlayerSpawnDataframeHandler);
             clientManager.Client.Subscribe<PlayerDeSpawnResponse>(PlayerDeSpawnResponseHandler);
         }
 
-        private void ConnectionSuccessful()
+        private void OnConnectionSuccessful()
         {
             var startPosition = new Vector3(Random.Range(-10f, 10f), Random.Range(-4f, 4f),0);
             var startRotation = Quaternion.identity;
@@ -37,6 +38,16 @@ namespace Examples.Scripts.Managers.Players
                 StartRotation = startRotation,
             };
             clientManager.Client.Send(ref requestSpawnDataframe);
+        }
+        
+        private void OnDisconnected()
+        {
+            foreach (var player in _spawnedPlayers)
+            {
+                Destroy(player.Value.gameObject);
+            }
+            
+            _spawnedPlayers.Clear();
         }
         
         private void PlayerSpawnDataframeHandler(PlayerSpawnResponseDataframe responseDataframe)
@@ -57,14 +68,15 @@ namespace Examples.Scripts.Managers.Players
             var id = responseDataframe.Id;
             
             var spawnedPlayer = _spawnedPlayers[id];
-            Destroy(spawnedPlayer);
+            Destroy(spawnedPlayer.gameObject);
 
             _spawnedPlayers.Remove(id);
         }
 
         private void OnDestroy()
         {
-            clientManager.Client.ConnectionSuccessful -= ConnectionSuccessful;
+            clientManager.Client.ConnectionSuccessful -= OnConnectionSuccessful;
+            clientManager.Client.Disconnected -= OnDisconnected;
             
             clientManager.Client.Unsubscribe<PlayerSpawnResponseDataframe>(PlayerSpawnDataframeHandler);
             clientManager.Client.Unsubscribe<PlayerDeSpawnResponse>(PlayerDeSpawnResponseHandler);
