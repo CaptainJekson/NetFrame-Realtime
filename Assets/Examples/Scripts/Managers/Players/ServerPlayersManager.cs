@@ -22,6 +22,7 @@ namespace Examples.Scripts.Managers.Players
             serverManager.Server.Subscribe<PlayerMoveDataframe>(PlayerMoveDataframeHandler);
         }
 
+        //todo можно подумать как это обобщить
         private void PlayerRequestSpawnDataframeHandler(PlayerSpawnRequestDataframe dataframe, int id)
         {
             if (_players.ContainsKey(id))
@@ -36,8 +37,6 @@ namespace Examples.Scripts.Managers.Players
                 CurrentRotation = dataframe.StartRotation,
             };
             
-            _players.Add(id, playerModel);
-
             var responseDataframe = new PlayerSpawnResponseDataframe
             {
                 IsLocal = true,
@@ -46,9 +45,23 @@ namespace Examples.Scripts.Managers.Players
                 StartRotation = dataframe.StartRotation,
             };
             serverManager.Server.Send(ref responseDataframe, id); //отправляем локальный спавн
-
+            
             responseDataframe.IsLocal = false;
             serverManager.Server.SendAllExcept(ref responseDataframe, id); //отправляем спавн другим игрока
+
+            foreach (var player in _players)
+            {
+                var responseOthersDataframe = new PlayerSpawnResponseDataframe
+                {
+                    IsLocal = false,
+                    Id = player.Key,
+                    StartPosition = player.Value.CurrentPosition,
+                    StartRotation = player.Value.CurrentRotation,
+                };
+                serverManager.Server.Send(ref responseOthersDataframe, id); //отправляем спавн других игроков
+            }
+
+            _players.Add(id, playerModel);
         }
         
         private void PlayerMoveDataframeHandler(PlayerMoveDataframe dataframe, int id)
