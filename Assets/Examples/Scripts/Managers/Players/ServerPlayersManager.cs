@@ -14,6 +14,8 @@ namespace Examples.Scripts.Managers.Players
 
         private void Awake()
         {
+            _players = new Dictionary<int, PlayerModel>();
+            
             serverManager.Server.ClientDisconnect += OnClientDisconnect;
             
             serverManager.Server.Subscribe<PlayerSpawnRequestDataframe>(PlayerRequestSpawnDataframeHandler);
