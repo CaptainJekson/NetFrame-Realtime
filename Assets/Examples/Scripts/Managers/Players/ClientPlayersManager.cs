@@ -27,7 +27,7 @@ namespace Examples.Scripts.Managers.Players
             clientManager.Client.Subscribe<PlayerDeSpawnResponse>(PlayerDeSpawnResponseHandler);
         }
 
-        private void OnConnectionSuccessful()
+        private void OnConnectionSuccessful(int id)
         {
             var startPosition = new Vector3(Random.Range(-10f, 10f), Random.Range(-4f, 4f),0);
             var startRotation = Quaternion.identity;

@@ -52,7 +52,7 @@ namespace Examples.Scripts.Managers
             Debug.Log("Disconnected from the server");
         }
         
-        private void OnConnectionSuccessful()
+        private void OnConnectionSuccessful(int id)
         {
             Debug.Log("Connected Successful to server");
         }
