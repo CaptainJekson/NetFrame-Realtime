@@ -1,4 +1,4 @@
-namespace NetFrame.Interpolation
+namespace NetFrame.Unity.Interpolation
 {
     public interface ISnapshot
     {

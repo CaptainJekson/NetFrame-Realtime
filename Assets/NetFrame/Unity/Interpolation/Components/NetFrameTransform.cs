@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using NetFrame.Interpolation;
-using NetFrame.Utils;
+using NetFrame.Unity.Interpolation.Utils;
 using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 
-namespace NetFrame.Components
+namespace NetFrame.Unity.Interpolation.Components
 {
     [Obsolete("Потом удалить")]
     public class NetFrameTransform : MonoBehaviour //todo по сути это только удаленный трансформ сейчас

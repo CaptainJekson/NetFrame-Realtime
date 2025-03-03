@@ -1,4 +1,4 @@
-using NetFrame.Interpolation;
+using NetFrame.Unity.Interpolation;
 using UnityEngine;
 
 namespace NetFrame

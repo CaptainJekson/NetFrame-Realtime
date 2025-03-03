@@ -1,8 +1,7 @@
 using System;
-using NetFrame.Utils;
 using UnityEngine;
 
-namespace NetFrame.Components
+namespace NetFrame.Unity.Interpolation.Components
 {
     [Serializable]
     public class SnapshotInterpolationSettings

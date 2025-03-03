@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace NetFrame.Utils
+namespace NetFrame.Unity.Interpolation.Utils
 {
     public static class NetworkTime
     {

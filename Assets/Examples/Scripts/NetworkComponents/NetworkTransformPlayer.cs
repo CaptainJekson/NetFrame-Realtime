@@ -1,5 +1,5 @@
 using Examples.Scripts.Dataframes;
-using NetFrame.Components;
+using NetFrame.Unity.Interpolation.Components;
 
 namespace Examples.Scripts.NetworkComponents
 {

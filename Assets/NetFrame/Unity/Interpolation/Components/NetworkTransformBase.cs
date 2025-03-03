@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using NetFrame.Client;
-using NetFrame.Interpolation;
+using NetFrame.Unity.Interpolation.Utils;
 using NetFrame.Utils;
 using UnityEngine;
 
-namespace NetFrame.Components
+namespace NetFrame.Unity.Interpolation.Components
 {
     public abstract class NetworkTransformBase<T> : MonoBehaviour where T : struct, INetworkDataframeTransform
     {

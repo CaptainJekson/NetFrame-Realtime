@@ -1,7 +1,7 @@
 using NetFrame.WriteAndRead;
 using UnityEngine;
 
-namespace NetFrame.UnityTypesWriteAndRead
+namespace NetFrame.Unity.UnityTypesWriteAndRead
 {
     public static class NetFrameUnityWriterExtension
     {
