@@ -52,14 +52,13 @@ namespace NetFrame.Core
                 while (_mainThreadActions.Count > 0)
                 {
                     var action = _mainThreadActions.Dequeue();
-                    Debug.Log($"action.Invoke, current thread: {Thread.CurrentThread.ManagedThreadId}");
                     action?.Invoke();
                 }
             }
 
             foreach (var peer in _peersById)
             {
-                Debug.Log($"peer id {peer.Value.ID} state: {peer.Value.State}");
+                //Debug.Log($"peer id {peer.Value.ID} state: {peer.Value.State}");
             }
         }
 
@@ -87,6 +86,13 @@ namespace NetFrame.Core
 
             _server.Flush();
             _server.Dispose();
+
+            foreach (var peer in _peersById)
+            {
+                peer.Value.Disconnect(0);
+            }
+            
+            _peersById.Clear();
             Library.Deinitialize();
         }
 
@@ -111,12 +117,13 @@ namespace NetFrame.Core
                             EnqueueAction(() =>
                                 Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
                                           netEvent.Peer.IP));
-                            _peersById.Remove(netEvent.Peer.ID, out var peer);
+                            _peersById.Remove(netEvent.Peer.ID, out _);
                             break;
 
                         case EventType.Timeout:
                             EnqueueAction(() =>
                                 Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            _peersById.Remove(netEvent.Peer.ID, out _);
                             break;
 
                         case EventType.Receive:

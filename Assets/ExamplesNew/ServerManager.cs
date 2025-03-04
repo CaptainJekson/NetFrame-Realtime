@@ -15,7 +15,7 @@ namespace ExamplesNew
 
         private void Update()
         {
-            _netFrameServerNew.Run(15);
+            _netFrameServerNew.Run(0);
 
             if (Input.GetKeyDown(KeyCode.S))
             {

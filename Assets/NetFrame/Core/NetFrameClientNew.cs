@@ -66,9 +66,9 @@ namespace NetFrame.Core
                 _clientThread.Join();
             }
 
+            _peer.Disconnect(0);
             _client.Flush();
             _client.Dispose();
-            _peer.Disconnect(0);
             Library.Deinitialize();
         }
         
