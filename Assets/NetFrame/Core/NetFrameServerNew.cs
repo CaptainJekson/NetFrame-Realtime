@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -15,12 +16,12 @@ namespace NetFrame.Core
         private int _timeout;
         private bool _isRunning;
 
-        private readonly Dictionary<uint, Peer> _peersById;
+        private readonly ConcurrentDictionary<uint, Peer> _peersById;
         private Queue<Action> _mainThreadActions;
 
         public NetFrameServerNew()
         {
-            _peersById = new Dictionary<uint, Peer>();
+            _peersById = new ConcurrentDictionary<uint, Peer>();
             _mainThreadActions = new Queue<Action>();
         }
 
@@ -55,6 +56,11 @@ namespace NetFrame.Core
                     action?.Invoke();
                 }
             }
+
+            foreach (var peer in _peersById)
+            {
+                Debug.Log($"peer id {peer.Value.ID} state: {peer.Value.State}");
+            }
         }
 
         public void SendAllTest()
@@ -88,54 +94,51 @@ namespace NetFrame.Core
         {
             while (_isRunning)
             {
-                if (_server.CheckEvents(out var netEvent) <= 0)
+                while (_server.CheckEvents(out var netEvent) > 0 || _server.Service(_timeout, out netEvent) > 0)
                 {
-                    if (_server.Service(_timeout, out netEvent) <= 0)
+                    switch (netEvent.Type)
                     {
-                        break;
+                        case EventType.None:
+                            break;
+
+                        case EventType.Connect:
+                            _peersById.TryAdd(netEvent.Peer.ID, netEvent.Peer);
+                            EnqueueAction(() =>
+                                Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            break;
+
+                        case EventType.Disconnect:
+                            EnqueueAction(() =>
+                                Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
+                                          netEvent.Peer.IP));
+                            _peersById.Remove(netEvent.Peer.ID, out var peer);
+                            break;
+
+                        case EventType.Timeout:
+                            EnqueueAction(() =>
+                                Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            break;
+
+                        case EventType.Receive:
+
+                            var sb = new StringBuilder();
+
+                            byte[] buffer = new byte[netEvent.Packet.Length]; // создаем массив нужного размера
+                            netEvent.Packet.CopyTo(buffer); // копируем данные из пакета в массив
+
+                            foreach (var bb in buffer)
+                            {
+                                sb.Append(bb + "|");
+                            }
+
+                            EnqueueAction(() =>
+                                Debug.Log("Packet received from - ID: " + netEvent.Peer.ID + ", IP: " +
+                                          netEvent.Peer.IP + ", Channel ID: " + netEvent.ChannelID + ", Data length: " +
+                                          netEvent.Packet.Length + ", Data: " + sb));
+
+                            netEvent.Packet.Dispose();
+                            break;
                     }
-                }
-
-                switch (netEvent.Type)
-                {
-                    case EventType.None:
-                        break;
-
-                    case EventType.Connect:
-                        EnqueueAction(() =>
-                            Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
-                        break;
-
-                    case EventType.Disconnect:
-                        EnqueueAction(() =>
-                            Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
-                                      netEvent.Peer.IP));
-                        break;
-
-                    case EventType.Timeout:
-                        EnqueueAction(() =>
-                            Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
-                        break;
-
-                    case EventType.Receive:
-
-                        var sb = new StringBuilder();
-
-                        byte[] buffer = new byte[netEvent.Packet.Length]; // создаем массив нужного размера
-                        netEvent.Packet.CopyTo(buffer); // копируем данные из пакета в массив
-
-                        foreach (var bb in buffer)
-                        {
-                            sb.Append(bb + "|");
-                        }
-
-                        EnqueueAction(() =>
-                            Debug.Log("Packet received from - ID: " + netEvent.Peer.ID + ", IP: " +
-                                      netEvent.Peer.IP + ", Channel ID: " + netEvent.ChannelID + ", Data length: " +
-                                      netEvent.Packet.Length + ", Data: " + sb));
-
-                        netEvent.Packet.Dispose();
-                        break;
                 }
             }
         }

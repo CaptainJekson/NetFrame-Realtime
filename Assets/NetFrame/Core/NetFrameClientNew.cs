@@ -10,11 +10,11 @@ namespace NetFrame.Core
 {
     public class NetFrameClientNew
     {
-        private Host client;
-        private Peer peer;
-        private Thread clientThread;
+        private Host _client;
+        private Peer _peer;
+        private Thread _clientThread;
         private int _timeout;
-        private bool isRunning;
+        private bool _isRunning;
 
         private readonly Queue<Action> _mainThreadActions;
 
@@ -27,20 +27,20 @@ namespace NetFrame.Core
         {
             Library.Initialize();
 
-            client = new Host();
+            _client = new Host();
             var address = new Address();
             
             address.SetHost(ip);
             address.Port = port;
 
-            client.Create();
+            _client.Create();
 
-            peer = client.Connect(address);
+            _peer = _client.Connect(address);
 
-            isRunning = true;
-            clientThread = new Thread(ClientThreadLoop);
-            clientThread.IsBackground = true;
-            clientThread.Start();
+            _isRunning = true;
+            _clientThread = new Thread(ClientThreadLoop);
+            _clientThread.IsBackground = true;
+            _clientThread.Start();
         }
 
         public void Run(int timeout)
@@ -59,15 +59,16 @@ namespace NetFrame.Core
 
         public void Stop()
         {
-            isRunning = false;
+            _isRunning = false;
 
-            if (clientThread != null && clientThread.IsAlive)
+            if (_clientThread != null && _clientThread.IsAlive)
             {
-                clientThread.Join();
+                _clientThread.Join();
             }
 
-            client.Flush();
-            client.Dispose();
+            _client.Flush();
+            _client.Dispose();
+            _peer.Disconnect(0);
             Library.Deinitialize();
         }
         
@@ -77,14 +78,14 @@ namespace NetFrame.Core
             byte[] data = { 8, 0, 8, 0, 8, 0, 8, 0, 8 };
 
             packet.Create(data);
-            peer.Send(0, ref packet);
+            _peer.Send(0, ref packet);
         }
 
         private void ClientThreadLoop()
         {
-            while (isRunning)
+            while (_isRunning)
             {
-                while (client.CheckEvents(out var netEvent) > 0 || client.Service(_timeout, out netEvent) > 0)
+                while (_client.CheckEvents(out var netEvent) > 0 || _client.Service(_timeout, out netEvent) > 0)
                 {
                     switch (netEvent.Type)
                     {
