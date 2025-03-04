@@ -17,7 +17,11 @@ namespace NetFrame.Core
         private bool _isRunning;
 
         private readonly ConcurrentDictionary<uint, Peer> _peersById;
-        private Queue<Action> _mainThreadActions;
+        private readonly Queue<Action> _mainThreadActions;
+        
+        public event Action<int> ClientConnection;
+        public event Action<int> ClientDisconnect;
+        //public event Action<NetworkLogType, string> LogCall;
 
         public NetFrameServerNew()
         {
@@ -55,13 +59,9 @@ namespace NetFrame.Core
                     action?.Invoke();
                 }
             }
-
-            foreach (var peer in _peersById)
-            {
-                //Debug.Log($"peer id {peer.Value.ID} state: {peer.Value.State}");
-            }
         }
 
+        [Obsolete("только для теста")]
         public void SendAllTest()
         {
             var packet = default(Packet);

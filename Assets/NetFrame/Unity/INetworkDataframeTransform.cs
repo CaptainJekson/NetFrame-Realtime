@@ -1,9 +1,9 @@
 using NetFrame.Unity.Interpolation;
 using UnityEngine;
 
-namespace NetFrame
+namespace NetFrame.Unity
 {
-    public interface INetworkDataframeTransform : ISnapshot, INetworkDataframe
+    public interface INetworkDataframeTransform : ISnapshot//, INetworkDataframe
     {
         public int Id { get; set; }
         Vector3 Position { get; set; }

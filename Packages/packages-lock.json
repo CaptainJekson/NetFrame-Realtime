@@ -1,12 +1,5 @@
 {
   "dependencies": {
-    "com.jeskvo.net-frame": {
-      "version": "https://github.com/CaptainJekson/NetFrame.git?path=/Packages/com.jeskvo.net-frame",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "8b4d11b92dc0cb722113ea5f991a82858fa78bad"
-    },
     "com.unity.2d.animation": {
       "version": "9.1.2",
       "depth": 1,

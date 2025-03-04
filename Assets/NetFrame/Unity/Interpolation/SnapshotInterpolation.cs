@@ -12,7 +12,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using NetFrame.Unity.Interpolation.Utils;
-using NetFrame.Utils;
+//using NetFrame.Utils;
 
 namespace NetFrame.Unity.Interpolation
 {
