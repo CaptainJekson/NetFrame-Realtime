@@ -27,5 +27,13 @@ namespace ExamplesNew
         {
             _netFrameServerNew.Stop();
         }
+        
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                Application.runInBackground = true;
+            }
+        }
     }
 }
