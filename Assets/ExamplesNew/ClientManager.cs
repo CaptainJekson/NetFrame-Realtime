@@ -1,3 +1,4 @@
+using ENet;
 using NetFrame.Core;
 using UnityEngine;
 
@@ -11,6 +12,10 @@ namespace ExamplesNew
         {
             _netFrameClientNew = new NetFrameClientNew();
             _netFrameClientNew.Connect("127.0.0.1", 8080);
+
+            _netFrameClientNew.ConnectionSuccessful += OnConnectionSuccessful;
+            _netFrameClientNew.Disconnected += OnDisconnected;
+            _netFrameClientNew.ConnectionFailed += ConnectionFailed;
         }
 
         private void Update()
@@ -21,11 +26,19 @@ namespace ExamplesNew
             {
                 _netFrameClientNew.SendTest();
             }
+            
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                _netFrameClientNew.Disconnect();
+            }
         }
 
         private void OnDestroy()
         {
-            _netFrameClientNew.Stop();
+            _netFrameClientNew.Disconnect();
+            _netFrameClientNew.ConnectionSuccessful -= OnConnectionSuccessful;
+            _netFrameClientNew.Disconnected -= OnDisconnected;
+            _netFrameClientNew.ConnectionFailed -= ConnectionFailed;
         }
         
         private void OnApplicationFocus(bool hasFocus)
@@ -34,6 +47,21 @@ namespace ExamplesNew
             {
                 Application.runInBackground = true;
             }
+        }
+        
+        private void OnConnectionSuccessful(Peer peer)
+        {
+            Debug.Log($"Connection successful, my id: {peer.ID}");
+        }
+        
+        private void OnDisconnected()
+        {
+            Debug.Log("Disconnected");
+        }
+        
+        private void ConnectionFailed()
+        {
+            Debug.Log("Connection failed");
         }
     }
 }

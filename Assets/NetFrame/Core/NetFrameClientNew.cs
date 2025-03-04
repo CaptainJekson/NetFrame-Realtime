@@ -11,12 +11,16 @@ namespace NetFrame.Core
     public class NetFrameClientNew
     {
         private Host _client;
-        private Peer _peer;
+        private Peer _clientPeer;
         private Thread _clientThread;
         private int _timeout;
         private bool _isRunning;
 
         private readonly Queue<Action> _mainThreadActions;
+        
+        public event Action<Peer> ConnectionSuccessful;
+        public event Action Disconnected;
+        public event Action ConnectionFailed;
 
         public NetFrameClientNew()
         {
@@ -35,7 +39,7 @@ namespace NetFrame.Core
 
             _client.Create();
 
-            _peer = _client.Connect(address);
+            _clientPeer = _client.Connect(address);
 
             _isRunning = true;
             _clientThread = new Thread(ClientThreadLoop);
@@ -57,28 +61,24 @@ namespace NetFrame.Core
             }
         }
 
-        public void Stop()
+        public void Disconnect()
         {
-            _isRunning = false;
-
-            if (_clientThread != null && _clientThread.IsAlive)
+            if (!TryCleanup())
             {
-                _clientThread.Join();
+                return;
             }
 
-            _peer.Disconnect(0);
-            _client.Flush();
-            _client.Dispose();
-            Library.Deinitialize();
+            Disconnected?.Invoke();
         }
-        
+
+        [Obsolete("только для теста")]
         public void SendTest()
         {
             var packet = default(Packet);
             byte[] data = { 8, 0, 8, 0, 8, 0, 8, 0, 8 };
 
             packet.Create(data);
-            _peer.Send(0, ref packet);
+            _clientPeer.Send(0, ref packet);
         }
 
         private void ClientThreadLoop()
@@ -91,23 +91,15 @@ namespace NetFrame.Core
                     {
                         case EventType.None:
                             break;
-
                         case EventType.Connect:
-                            EnqueueAction(() =>
-                                Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            EnqueueAction(() => ConnectionSuccessful?.Invoke(netEvent.Peer));
                             break;
-
                         case EventType.Disconnect:
-                            EnqueueAction(() =>
-                                Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
-                                          netEvent.Peer.IP));
+                            EnqueueAction(Disconnect);
                             break;
-
                         case EventType.Timeout:
-                            EnqueueAction(() =>
-                                Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            EnqueueAction(OnConnectionFailed);
                             break;
-
                         case EventType.Receive:
 
                             var sb = new StringBuilder();
@@ -131,13 +123,45 @@ namespace NetFrame.Core
                 }
             }
         }
-        
+
         private void EnqueueAction(Action action)
         {
             lock (_mainThreadActions)
             {
                 _mainThreadActions.Enqueue(action);
             }
+        }
+
+        private void OnConnectionFailed()
+        {
+            if (!TryCleanup())
+            {
+                return;
+            }
+
+            ConnectionFailed?.Invoke();
+        }
+        
+        private bool TryCleanup()
+        {
+            if (!_isRunning)
+            {
+                return false;
+            }
+
+            _isRunning = false;
+
+            if (_clientThread != null && _clientThread.IsAlive)
+            {
+                _clientThread.Join();
+            }
+
+            _clientPeer.Disconnect(0);
+            _client.Flush();
+            _client.Dispose();
+            Library.Deinitialize();
+            
+            return true;
         }
     }
 }

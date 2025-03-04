@@ -19,9 +19,8 @@ namespace NetFrame.Core
         private readonly ConcurrentDictionary<uint, Peer> _peersById;
         private readonly Queue<Action> _mainThreadActions;
         
-        public event Action<int> ClientConnection;
-        public event Action<int> ClientDisconnect;
-        //public event Action<NetworkLogType, string> LogCall;
+        public event Action<Peer> ClientConnection;
+        public event Action<Peer> ClientDisconnect;
 
         public NetFrameServerNew()
         {
@@ -83,16 +82,16 @@ namespace NetFrame.Core
             {
                 serverThread.Join();
             }
-
-            _server.Flush();
-            _server.Dispose();
-
+            
             foreach (var peer in _peersById)
             {
                 peer.Value.Disconnect(0);
             }
-            
             _peersById.Clear();
+            
+            _server.Flush();
+            _server.Dispose();
+            
             Library.Deinitialize();
         }
 
@@ -106,26 +105,18 @@ namespace NetFrame.Core
                     {
                         case EventType.None:
                             break;
-
                         case EventType.Connect:
                             _peersById.TryAdd(netEvent.Peer.ID, netEvent.Peer);
-                            EnqueueAction(() =>
-                                Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            EnqueueAction(() => ClientConnection?.Invoke(netEvent.Peer));
                             break;
-
                         case EventType.Disconnect:
-                            EnqueueAction(() =>
-                                Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
-                                          netEvent.Peer.IP));
+                            EnqueueAction(() => ClientDisconnect?.Invoke(netEvent.Peer));
                             _peersById.Remove(netEvent.Peer.ID, out _);
                             break;
-
                         case EventType.Timeout:
-                            EnqueueAction(() =>
-                                Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                            EnqueueAction(() => ClientDisconnect?.Invoke(netEvent.Peer));
                             _peersById.Remove(netEvent.Peer.ID, out _);
                             break;
-
                         case EventType.Receive:
 
                             var sb = new StringBuilder();
