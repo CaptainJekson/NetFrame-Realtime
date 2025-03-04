@@ -73,12 +73,12 @@ namespace NetFrame.Core
         public void Stop()
         {
             _isRunning = false;
-            
+
             if (serverThread != null && serverThread.IsAlive)
             {
                 serverThread.Join();
             }
-            
+
             _server.Flush();
             _server.Dispose();
             Library.Deinitialize();
@@ -86,63 +86,56 @@ namespace NetFrame.Core
 
         private void ServerThreadLoop()
         {
-            var polled = false;
-
             while (_isRunning)
             {
-                while (!polled)
+                if (_server.CheckEvents(out var netEvent) <= 0)
                 {
-                    if (_server.CheckEvents(out var netEvent) <= 0)
+                    if (_server.Service(_timeout, out netEvent) <= 0)
                     {
-                        if (_server.Service(_timeout, out netEvent) <= 0)
+                        break;
+                    }
+                }
+
+                switch (netEvent.Type)
+                {
+                    case EventType.None:
+                        break;
+
+                    case EventType.Connect:
+                        EnqueueAction(() =>
+                            Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                        break;
+
+                    case EventType.Disconnect:
+                        EnqueueAction(() =>
+                            Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
+                                      netEvent.Peer.IP));
+                        break;
+
+                    case EventType.Timeout:
+                        EnqueueAction(() =>
+                            Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
+                        break;
+
+                    case EventType.Receive:
+
+                        var sb = new StringBuilder();
+
+                        byte[] buffer = new byte[netEvent.Packet.Length]; // создаем массив нужного размера
+                        netEvent.Packet.CopyTo(buffer); // копируем данные из пакета в массив
+
+                        foreach (var bb in buffer)
                         {
-                            break;
+                            sb.Append(bb + "|");
                         }
 
-                        polled = true;
-                    }
+                        EnqueueAction(() =>
+                            Debug.Log("Packet received from - ID: " + netEvent.Peer.ID + ", IP: " +
+                                      netEvent.Peer.IP + ", Channel ID: " + netEvent.ChannelID + ", Data length: " +
+                                      netEvent.Packet.Length + ", Data: " + sb));
 
-                    switch (netEvent.Type)
-                    {
-                        case EventType.None:
-                            break;
-
-                        case EventType.Connect:
-                            EnqueueAction(() =>
-                                Debug.Log("Client connected - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
-                            break;
-
-                        case EventType.Disconnect:
-                            EnqueueAction(() =>
-                                Debug.Log("Client disconnected - ID: " + netEvent.Peer.ID + ", IP: " +
-                                          netEvent.Peer.IP));
-                            break;
-
-                        case EventType.Timeout:
-                            EnqueueAction(() =>
-                                Debug.Log("Client timeout - ID: " + netEvent.Peer.ID + ", IP: " + netEvent.Peer.IP));
-                            break;
-
-                        case EventType.Receive:
-
-                            var sb = new StringBuilder();
-
-                            byte[] buffer = new byte[netEvent.Packet.Length]; // создаем массив нужного размера
-                            netEvent.Packet.CopyTo(buffer); // копируем данные из пакета в массив
-
-                            foreach (var bb in buffer)
-                            {
-                                sb.Append(bb + "|");
-                            }
-
-                            EnqueueAction(() =>
-                                Debug.Log("Packet received from - ID: " + netEvent.Peer.ID + ", IP: " +
-                                          netEvent.Peer.IP + ", Channel ID: " + netEvent.ChannelID + ", Data length: " +
-                                          netEvent.Packet.Length + ", Data: " + sb));
-
-                            netEvent.Packet.Dispose();
-                            break;
-                    }
+                        netEvent.Packet.Dispose();
+                        break;
                 }
             }
         }
