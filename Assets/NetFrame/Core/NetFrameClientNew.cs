@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using ENet;
+using NetFrame.Dataframe;
 using UnityEngine;
 using EventType = ENet.EventType;
 
@@ -22,8 +23,10 @@ namespace NetFrame.Core
         public event Action Disconnected;
         public event Action ConnectionFailed;
 
-        public NetFrameClientNew()
+        public NetFrameClientNew(int bufferSize)
         {
+            NetFrameContainer.SetClient(this);
+            
             _mainThreadActions = new Queue<Action>();
         }
 
@@ -71,14 +74,19 @@ namespace NetFrame.Core
             Disconnected?.Invoke();
         }
 
-        [Obsolete("только для теста")]
-        public void SendTest()
+        public void Send<T>(ref T dataframe) where T : struct, INetworkDataframe
         {
-            var packet = default(Packet);
-            byte[] data = { 8, 0, 8, 0, 8, 0, 8, 0, 8 };
+            
+        }
 
-            packet.Create(data);
-            _clientPeer.Send(0, ref packet);
+        public void Subscribe<T>(Action<T> handler) where T : struct, INetworkDataframe
+        {
+            
+        }
+
+        public void Unsubscribe<T>(Action<T> handler) where T : struct, INetworkDataframe
+        {
+            
         }
 
         private void ClientThreadLoop()
@@ -101,22 +109,6 @@ namespace NetFrame.Core
                             EnqueueAction(OnConnectionFailed);
                             break;
                         case EventType.Receive:
-
-                            var sb = new StringBuilder();
-
-                            byte[] buffer = new byte[netEvent.Packet.Length]; // создаем массив нужного размера
-                            netEvent.Packet.CopyTo(buffer); // копируем данные из пакета в массив
-
-                            foreach (var bb in buffer)
-                            {
-                                sb.Append(bb + "|");
-                            }
-
-                            EnqueueAction(() =>
-                                Debug.Log("Packet received from - ID: " + netEvent.Peer.ID + ", IP: " +
-                                          netEvent.Peer.IP + ", Channel ID: " + netEvent.ChannelID + ", Data length: " +
-                                          netEvent.Packet.Length + ", Data: " + sb));
-
                             netEvent.Packet.Dispose();
                             break;
                     }

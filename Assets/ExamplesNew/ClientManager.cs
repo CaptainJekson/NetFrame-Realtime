@@ -10,7 +10,7 @@ namespace ExamplesNew
         
         private void Awake()
         {
-            _netFrameClientNew = new NetFrameClientNew();
+            _netFrameClientNew = new NetFrameClientNew(2048);
             _netFrameClientNew.Connect("127.0.0.1", 8080);
 
             _netFrameClientNew.ConnectionSuccessful += OnConnectionSuccessful;
@@ -24,7 +24,7 @@ namespace ExamplesNew
 
             if (Input.GetKeyDown(KeyCode.S))
             {
-                _netFrameClientNew.SendTest();
+                //_netFrameClientNew.SendTest();
             }
             
             if (Input.GetKeyDown(KeyCode.D))

@@ -10,7 +10,7 @@ namespace ExamplesNew
         
         private void Awake()
         {
-            _netFrameServerNew = new NetFrameServerNew();
+            _netFrameServerNew = new NetFrameServerNew(1024);
             _netFrameServerNew.Start(8080, 10);
 
             _netFrameServerNew.ClientConnection += OnClientConnection;
@@ -23,7 +23,7 @@ namespace ExamplesNew
 
             if (Input.GetKeyDown(KeyCode.S))
             {
-                _netFrameServerNew.SendAllTest();
+                //_netFrameServerNew.SendAllTest();
             }
         }
 
