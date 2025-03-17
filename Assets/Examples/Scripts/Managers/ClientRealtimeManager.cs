@@ -2,6 +2,7 @@ using System.Reflection;
 using ENet;
 using NetFrame.Core;
 using NetFrame.Dataframe;
+using NetFrame.Enums;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,7 +29,7 @@ namespace Examples.Scripts.Managers
             _netFrameClient = new NetFrameClientNew(2048);
         
             _netFrameClient.ConnectionSuccessful += OnConnectionSuccessful;
-            //_netFrameClient.LogCall += OnLog;
+            _netFrameClient.LogCall += OnLog;
             _netFrameClient.Disconnected += OnDisconnected;
             
             connectButton.onClick.AddListener(() =>
@@ -44,7 +45,7 @@ namespace Examples.Scripts.Managers
         
         private void Update()
         {
-            _netFrameClient.Run(100);
+            _netFrameClient.Run(0);
         }
         
         private void OnDisconnected()
@@ -57,29 +58,37 @@ namespace Examples.Scripts.Managers
             Debug.Log("Connected Successful to server");
         }
         
-        // private void OnLog(NetworkLogType reason, string value)
-        // {
-        //     switch (reason)
-        //     {
-        //         case NetworkLogType.Info:
-        //             Debug.Log(value);
-        //             break;
-        //         case NetworkLogType.Warning:
-        //             Debug.LogWarning(value);
-        //             break;
-        //         case NetworkLogType.Error:
-        //             Debug.LogError(value);
-        //             break;
-        //     }
-        // }
+        private void OnLog(NetworkLogType reason, string value)
+        {
+            switch (reason)
+            {
+                case NetworkLogType.Info:
+                    Debug.Log(value);
+                    break;
+                case NetworkLogType.Warning:
+                    Debug.LogWarning(value);
+                    break;
+                case NetworkLogType.Error:
+                    Debug.LogError(value);
+                    break;
+            }
+        }
         
         private void OnApplicationQuit()
         {
             _netFrameClient.ConnectionSuccessful -= OnConnectionSuccessful;
-            //_netFrameClient.LogCall -= OnLog;
+            _netFrameClient.LogCall -= OnLog;
             _netFrameClient.Disconnected -= OnDisconnected;
         
             _netFrameClient.Disconnect();
+        }
+        
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                Application.runInBackground = true;
+            }
         }
     }
 }

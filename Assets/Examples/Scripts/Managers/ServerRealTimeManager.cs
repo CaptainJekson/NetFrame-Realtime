@@ -4,6 +4,7 @@ using ENet;
 using Examples.Scripts.Model;
 using NetFrame.Core;
 using NetFrame.Dataframe;
+using NetFrame.Enums;
 using UnityEngine;
 
 namespace Examples.Scripts.Managers
@@ -27,12 +28,12 @@ namespace Examples.Scripts.Managers
         
             _netFrameServer.ClientConnection += OnClientConnection;
             _netFrameServer.ClientDisconnect += OnClientDisconnect;
-            //_netFrameServer.LogCall += OnLog;
+            _netFrameServer.LogCall += OnLog;
         }
         
         private void Update()
         {
-            _netFrameServer.Run(100);
+            _netFrameServer.Run(0);
         }
         
         private void OnClientConnection(Peer peer)
@@ -45,25 +46,33 @@ namespace Examples.Scripts.Managers
             Debug.Log($"client disconnected Id = {peer.ID}");
         }
         
-        // private void OnLog(NetworkLogType reason, string value)
-        // {
-        //     switch (reason)
-        //     {
-        //         case NetworkLogType.Info:
-        //             Debug.Log(value);
-        //             break;
-        //         case NetworkLogType.Warning:
-        //             Debug.LogWarning(value);
-        //             break;
-        //         case NetworkLogType.Error:
-        //             Debug.LogError(value);
-        //             break;
-        //     }
-        // }
+        private void OnLog(NetworkLogType reason, string value)
+        {
+            switch (reason)
+            {
+                case NetworkLogType.Info:
+                    Debug.Log(value);
+                    break;
+                case NetworkLogType.Warning:
+                    Debug.LogWarning(value);
+                    break;
+                case NetworkLogType.Error:
+                    Debug.LogError(value);
+                    break;
+            }
+        }
         
         private void OnApplicationQuit()
         {
             _netFrameServer.Stop();
+        }
+        
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                Application.runInBackground = true;
+            }
         }
     }
 }

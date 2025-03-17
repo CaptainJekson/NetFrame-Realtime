@@ -183,15 +183,14 @@ namespace NetFrame.Core
                             var packetLength = netEvent.Packet.Length;
                             if (_buffer.Length < packetLength)
                             {
-                                LogCall?.Invoke(NetworkLogType.Error, "[NetFrameServerNew.ServerThreadLoop] " +
+                                LogCall?.Invoke(NetworkLogType.Error, "[NetFrameServer.ServerThreadLoop] " +
                                                                       "message too big: " + netEvent.Packet.Length +
                                                                       ". Limit: " + _buffer.Length);
+                                netEvent.Packet.Dispose();
                                 break;
                             }
-
-                            BeginReadDataframe(netEvent.Peer.ID, packetLength);
-
                             netEvent.Packet.CopyTo(_buffer);
+                            BeginReadDataframe(netEvent.Peer.ID, packetLength);
                             netEvent.Packet.Dispose();
 
                             break;
@@ -221,7 +220,7 @@ namespace NetFrame.Core
 
             if (!NetFrameDataframeCollection.TryGetByKey(headerDataframe, out var dataframe))
             {
-                LogCall?.Invoke(NetworkLogType.Error, $"[NetFrame.BeginReadDataframe] no datagram: {headerDataframe}");
+                LogCall?.Invoke(NetworkLogType.Error, $"[NetFrameServer.BeginReadDataframe] no dataframe: {headerDataframe}");
                 return;
             }
 
@@ -237,9 +236,13 @@ namespace NetFrame.Core
                 return;
             }
             
+            var localDataframe = dataframe;
+            var localClientId = clientId;
+            
             foreach (var handler in handlers)
             {
-                handler.DynamicInvoke(dataframe, clientId);
+                var localHandler = handler;
+                EnqueueAction(() => localHandler.DynamicInvoke(localDataframe, localClientId));
             }
         }
         

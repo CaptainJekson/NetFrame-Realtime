@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -408,7 +407,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bad71ca5e3da439196bdb3d5cd01b392, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ipAddress: 192.168.31.103
+  ipAddress: 127.0.0.1
   connectButton: {fileID: 177429329}
   disconnectButton: {fileID: 177429327}
 --- !u!1 &398954086
